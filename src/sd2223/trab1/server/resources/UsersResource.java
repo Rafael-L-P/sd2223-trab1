@@ -36,8 +36,8 @@ public class UsersResource implements UsersService {
 			Log.info("User already exists.");
 			throw new WebApplicationException(Status.CONFLICT);
 		}
-
-		return user.getName();
+		String username = user.getName() + "@" + user.getDomain();
+		return username;
 	}
 
 	@Override
@@ -76,6 +76,11 @@ public class UsersResource implements UsersService {
 			throw new WebApplicationException(Status.BAD_REQUEST);
 		}
 
+		if ( !name.equals(user.getName())  ) {
+			Log.info("Tried to change the users name.");
+			throw new WebApplicationException(Status.BAD_REQUEST);
+		}
+
 		var currentUser = users.get(name);
 
 		// Check if user exists
@@ -90,10 +95,18 @@ public class UsersResource implements UsersService {
 			throw new WebApplicationException(Status.FORBIDDEN);
 		}
 
-		currentUser.setPwd(user.getPwd());
-		currentUser.setDomain(user.getDomain());
-		currentUser.setDisplayName(user.getDisplayName());
-		currentUser.setName(user.getName());
+		String newPwd = user.getPwd();
+		if(newPwd != null)
+			currentUser.setPwd(newPwd);
+
+		String displayName = user.getDisplayName();
+		if (displayName != null)
+			currentUser.setDisplayName(displayName);
+
+		String domain = user.getDomain();
+		if(domain != null) {
+			currentUser.setDomain(domain);
+		}
 
 		return currentUser;
 	}
@@ -101,6 +114,11 @@ public class UsersResource implements UsersService {
 	@Override
 	public User deleteUser(String name, String pwd) {
 		Log.info("deleteUser : user = " + name + "; pwd = " + pwd);
+
+		if (name == null || pwd == null) {
+			Log.info("Name or password null.");
+			throw new WebApplicationException(Status.BAD_REQUEST);
+		}
 
 		var currentUser = users.get(name);
 

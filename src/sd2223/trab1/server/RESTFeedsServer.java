@@ -28,12 +28,9 @@ public class RESTFeedsServer {
 
     public static void main(String[] args) {
 
-        if (args.length < 2) {
-            System.out.println("Failed to initialize server,missing server domain and/or ID.");
-            return;
-        }
-        domain = args[0];
-        serverID = Integer.parseInt(args[1]);
+        String[] tokens = args[0].split(".");
+        domain = tokens[0];
+        serverID = Integer.parseInt(tokens[1]);
 
         try {
 

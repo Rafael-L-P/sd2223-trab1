@@ -27,14 +27,9 @@ public class RESTUsersServer {
 
     public static void main(String[] args) {
 
-        if (args.length < 2) {
-            System.out.println("Failed to initialize server,missing server domain and/or ID.");
-            return;
-        }
-
         String[] tokens = args[0].split("-");
-        serverID = Integer.parseInt(tokens[1]);
         domain = tokens[0];
+        serverID = Integer.parseInt(tokens[1]);
 
         try {
 

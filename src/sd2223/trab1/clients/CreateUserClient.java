@@ -27,7 +27,9 @@ public class CreateUserClient {
 		String domain = args[3];
 		String displayName = args[4];
 
-		User u = new User(name+"@"+domain, pwd, domain, displayName);
+		String username = name + "@" + domain;
+
+		User u = new User(username, pwd, domain, displayName);
 
 		Log.info("Sending request to server.");
 
