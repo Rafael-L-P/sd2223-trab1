@@ -1,5 +1,7 @@
 package sd2223.trab1.clients;
 
+import sd2223.trab1.api.Message;
+
 import java.io.IOException;
 import java.net.URI;
 import java.util.logging.Logger;
@@ -18,15 +20,19 @@ public class PostMessageFeed {
             return;
         }
 
-        String user = args[0];
-        String msg = args[1];
+        String serverUrl = args[0];
+        String user = args[1];
         String pwd = args[2];
+        String domain = args[3];
+        String text = args[4];
 
+
+        Message msg = new Message(-1,user,domain,text);
 
         Log.info("Sending request to server.");
 
         //  Todo
-        var result = new Rest.create(serverUrl)).createUser(u);
+        var result = new RestMessageClient(URI.create(serverUrl)).postMessage(user,pwd,msg);
         System.out.println("Result: " + result);
     }
 
