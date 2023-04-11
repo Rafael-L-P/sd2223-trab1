@@ -13,6 +13,7 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 import java.util.logging.Logger;
 
 public class FeedResource implements FeedsService {
@@ -39,15 +40,21 @@ public class FeedResource implements FeedsService {
             throw new WebApplicationException(Status.BAD_REQUEST);
         }
 
-        String serviceName = domain + ":users";
-        // Check if the user exists and the pwd is correct
-        var currentUser = getUser(user, pwd, serviceName);
-
+        String[] tokens = user.split("@");
 
         // Check if the domain in the message is the server domain
         if (!msg.getDomain().equals(domain)) {
             Log.info("Incorret Message domain");
             throw new WebApplicationException(Status.BAD_REQUEST);
+        }
+
+        String serviceName = domain + ":users";
+        // Check if the user exists and the pwd is correct
+        var currentUser = getUser(tokens[0], pwd, serviceName);
+
+        if( currentUser == null) {
+            Log.info("Publisher does not exist in current domain.");
+            throw new WebApplicationException(Status.NOT_FOUND);
         }
 
         if( msg.getId() == -1) {
@@ -57,9 +64,13 @@ public class FeedResource implements FeedsService {
         }
 
         Feed userFeed = feeds.get(currentUser.getName());
+        if(userFeed == null) {
+            userFeed = new Feed(user,domain);
+            feeds.put(currentUser.getName(),userFeed);
+        }
         userFeed.postMessage(msg);
 
-        return 0;
+        return 3;
     }
 
     @Override
@@ -99,5 +110,4 @@ public class FeedResource implements FeedsService {
         var result = new RestFeedServer(uris[0]).getUser(user,pwd);
         return result;
     }
-
 }

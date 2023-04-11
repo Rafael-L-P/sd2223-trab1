@@ -20,16 +20,14 @@ public class RESTUsersServer {
     }
 
     public static final int PORT = 8080;
-    public static final String SERVICE = "UsersService";
+    public static final String SERVICE = "users";
     private static final String SERVER_URI_FMT = "http://%s:%s/rest";
     private static String domain;
     private static int serverID;
 
     public static void main(String[] args) {
 
-        String[] tokens = args[0].split("-");
-        domain = tokens[0];
-        serverID = Integer.parseInt(tokens[1]);
+        domain = args[0];
 
         try {
 
@@ -41,11 +39,11 @@ public class RESTUsersServer {
             String serverURI = String.format(SERVER_URI_FMT, ip, PORT);
             JdkHttpServerFactory.createHttpServer(URI.create(serverURI), config);
 
-            String serviceName = domain + ":users";
+            String serviceName = domain + ":" + SERVICE;
             Discovery disc = Discovery.getInstance();
-            disc.announce(SERVICE, serverURI);
+            disc.announce(serviceName, serverURI);
 
-            Log.info(String.format("%s Server ready @ %s\n", SERVICE, serverURI));
+            Log.info(String.format("%s Server ready @ %s\n", serviceName, serverURI));
 
             // More code can be executed here...
         } catch (Exception e) {
