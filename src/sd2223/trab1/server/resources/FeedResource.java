@@ -7,6 +7,7 @@ import sd2223.trab1.api.Feed;
 import sd2223.trab1.api.Message;
 import sd2223.trab1.api.User;
 import sd2223.trab1.api.rest.FeedsService;
+import sd2223.trab1.clients.RestFeedServer;
 
 import java.net.URI;
 import java.util.HashMap;
@@ -38,8 +39,9 @@ public class FeedResource implements FeedsService {
             throw new WebApplicationException(Status.BAD_REQUEST);
         }
 
+        String serviceName = domain + ":users";
         // Check if the user exists and the pwd is correct
-        var user = getUser(user, pwd);
+        var currentUser = getUser(user, pwd, serviceName);
 
 
         // Check if the domain in the message is the server domain
@@ -50,11 +52,12 @@ public class FeedResource implements FeedsService {
 
         if( msg.getId() == -1) {
             // Generate mid
-            msg.setId(0);
+            msg.setId(3);
             // Propagate msg
         }
 
-        feeds.put(user.getName(),msg);
+        Feed userFeed = feeds.get(currentUser.getName());
+        userFeed.postMessage(msg);
 
         return 0;
     }
@@ -93,6 +96,8 @@ public class FeedResource implements FeedsService {
         // Use discovery to get the userservice uri
         URI[] uris = dis.knownUrisOf(serviceName,1);
 
-        // Make the get request using the uri
+        var result = new RestFeedServer(uris[0]).getUser(user,pwd);
+        return result;
     }
+
 }

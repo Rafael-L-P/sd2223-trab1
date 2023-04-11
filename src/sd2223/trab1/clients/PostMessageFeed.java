@@ -26,7 +26,7 @@ public class PostMessageFeed {
         Log.info("Sending request to server.");
 
         //  Todo
-        var result = new Rest(URI.create(serverUrl)).createUser(u);
+        var result = new Rest.create(serverUrl)).createUser(u);
         System.out.println("Result: " + result);
     }
 

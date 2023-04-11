@@ -44,6 +44,7 @@ public class RESTUsersServer {
             String serverURI = String.format(SERVER_URI_FMT, ip, PORT);
             JdkHttpServerFactory.createHttpServer(URI.create(serverURI), config);
 
+            String serviceName = domain + ":users";
             Discovery disc = Discovery.getInstance();
             disc.announce(SERVICE, serverURI);
 
