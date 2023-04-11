@@ -10,10 +10,10 @@ import sd2223.trab1.api.rest.FeedsService;
 import sd2223.trab1.clients.RestFeedServer;
 
 import java.net.URI;
+import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import java.util.logging.Logger;
 
 public class FeedResource implements FeedsService {
@@ -62,6 +62,7 @@ public class FeedResource implements FeedsService {
             msg.setId(3);
             // Propagate msg
         }
+        msg.setCreationTime(System.currentTimeMillis());
 
         Feed userFeed = feeds.get(currentUser.getName());
         if(userFeed == null) {
@@ -80,12 +81,38 @@ public class FeedResource implements FeedsService {
 
     @Override
     public Message getMessage(String user, long mid) {
-        return null;
+
+        String[] tokens = user.split("@");
+
+        Feed feed = feeds.get(tokens[0]);
+        if (feed == null) {
+            Log.info("User or Message does not exist.");
+            throw new WebApplicationException(Status.NOT_FOUND);
+        }
+
+        Message msg = feed.getMessage(mid);
+        if(msg == null) {
+            Log.info("Message does not exist.");
+            throw new WebApplicationException(Status.NOT_FOUND);
+        }
+
+        return msg;
     }
 
     @Override
     public List<Message> getMessages(String user, long time) {
-        return null;
+
+        String[] tokens = user.split("@");
+
+        Feed feed = feeds.get(tokens[0]);
+        if (feed == null) {
+            Log.info("User does not exist.");
+            throw new WebApplicationException(Status.NOT_FOUND);
+        }
+
+        List<Message> messageList = feed.getMessages(time);
+
+        return messageList;
     }
 
     @Override

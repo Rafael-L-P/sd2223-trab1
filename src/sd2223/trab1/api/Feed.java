@@ -42,8 +42,16 @@ public class Feed {
     }
 
     public List<Message> getMessages(long time) {
-        //Todo
-        return null;
+        List<Message> result = new ArrayList<Message>();
+        messageList.values().stream().forEach(m -> {
+            if (m.getCreationTime() > time) {
+                Message msg = new Message(m.getId(),m.getUser(),m.getDomain(),m.getText());
+                msg.setCreationTime(m.getCreationTime());
+                result.add(msg);
+            }
+        });
+
+        return result;
     }
 
     public  List<String> getUserSubs() {
