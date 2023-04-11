@@ -1,6 +1,7 @@
 package sd2223.trab1.clients;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.logging.Logger;
 
 public class PostMessageFeed {
@@ -25,8 +26,8 @@ public class PostMessageFeed {
         Log.info("Sending request to server.");
 
         //  Todo
-        //var result = new ();
-        //System.out.println("Result: " + result);
+        var result = new Rest(URI.create(serverUrl)).createUser(u);
+        System.out.println("Result: " + result);
     }
 
 

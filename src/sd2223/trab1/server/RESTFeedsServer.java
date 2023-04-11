@@ -8,11 +8,13 @@ import org.glassfish.jersey.jdkhttp.JdkHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import sd2223.trab1.api.Discovery;
+import sd2223.trab1.server.resources.FeedResource;
 import sd2223.trab1.server.resources.UsersResource;
 
-public class UsersServer {
+public class RESTFeedsServer {
 
-    private static Logger Log = Logger.getLogger(UsersServer.class.getName());
+
+    private static Logger Log = Logger.getLogger(RESTUsersServer.class.getName());
 
     static {
         System.setProperty("java.net.preferIPv4Stack", "true");
@@ -21,12 +23,22 @@ public class UsersServer {
     public static final int PORT = 8080;
     public static final String SERVICE = "UsersService";
     private static final String SERVER_URI_FMT = "http://%s:%s/rest";
+    private static String domain;
+    private static int serverID;
 
     public static void main(String[] args) {
+
+        if (args.length < 2) {
+            System.out.println("Failed to initialize server,missing server domain and/or ID.");
+            return;
+        }
+        domain = args[0];
+        serverID = Integer.parseInt(args[1]);
+
         try {
 
             ResourceConfig config = new ResourceConfig();
-            config.register(UsersResource.class);
+            config.register(new FeedResource(domain,serverID));
             //config.register(CustomLoggingFilter.class);
 
             String ip = InetAddress.getLocalHost().getHostAddress();
@@ -43,4 +55,8 @@ public class UsersServer {
             Log.severe(e.getMessage());
         }
     }
+
 }
+
+
+

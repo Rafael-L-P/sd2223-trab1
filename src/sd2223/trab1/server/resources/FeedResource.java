@@ -1,9 +1,14 @@
 package sd2223.trab1.server.resources;
 
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response.Status;
+import sd2223.trab1.api.Discovery;
 import sd2223.trab1.api.Feed;
 import sd2223.trab1.api.Message;
+import sd2223.trab1.api.User;
 import sd2223.trab1.api.rest.FeedsService;
 
+import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,15 +19,42 @@ public class FeedResource implements FeedsService {
 
     private static Logger Log = Logger.getLogger(UsersResource.class.getName());
 
-    public FeedResource() {}
+    private String domain;
+    private int serverID;
+    private Discovery dis;
+
+    public FeedResource(String domain, int serverID) {
+        this.domain = domain;
+        this.serverID = serverID;
+        this.dis = Discovery.getInstance();
+    }
 
 
     @Override
     public long postMessage(String user, String pwd, Message msg) {
 
+        if (user == null || pwd == null || msg == null) {
+            Log.info("Name, Password or Message null.");
+            throw new WebApplicationException(Status.BAD_REQUEST);
+        }
+
         // Check if the user exists and the pwd is correct
+        var user = getUser(user, pwd);
 
 
+        // Check if the domain in the message is the server domain
+        if (!msg.getDomain().equals(domain)) {
+            Log.info("Incorret Message domain");
+            throw new WebApplicationException(Status.BAD_REQUEST);
+        }
+
+        if( msg.getId() == -1) {
+            // Generate mid
+            msg.setId(0);
+            // Propagate msg
+        }
+
+        feeds.put(user.getName(),msg);
 
         return 0;
     }
@@ -55,5 +87,12 @@ public class FeedResource implements FeedsService {
     @Override
     public List<String> listSubs(String user) {
         return null;
+    }
+
+    private User getUser(String user, String pwd,String serviceName) {
+        // Use discovery to get the userservice uri
+        URI[] uris = dis.knownUrisOf(serviceName,1);
+
+        // Make the get request using the uri
     }
 }
