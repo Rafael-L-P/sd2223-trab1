@@ -61,6 +61,7 @@ public class FeedResource implements FeedsService {
             // Generate mid
             msg.setId(3);
             // Propagate msg
+            propagateMessage(msg, tokens[0]);
         }
         msg.setCreationTime(System.currentTimeMillis());
 
@@ -77,6 +78,28 @@ public class FeedResource implements FeedsService {
     @Override
     public void removeFromPersonalFeed(String user, long mid, String pwd) {
 
+        String[] tokens = user.split("@");
+
+        var currentUser = getUser(tokens[0],pwd,tokens[1]);
+
+        if(currentUser == null) {
+            Log.info("User does not exist.");
+            throw new WebApplicationException(Status.NOT_FOUND);
+        }
+
+        if(!currentUser.getPwd().equals(pwd)) {
+            Log.info("Password is incorrect.");
+            throw new WebApplicationException(Status.FORBIDDEN);
+        }
+
+        Feed userFeed = feeds.get(tokens[0]);
+
+        if(userFeed.getMessage(mid) == null) {
+            Log.info("Message does not exist in the server.");
+            throw new WebApplicationException(Status.NOT_FOUND);
+        }
+        
+        userFeed.removeMessage(mid);
     }
 
     @Override
@@ -118,16 +141,68 @@ public class FeedResource implements FeedsService {
     @Override
     public void subUser(String user, String userSub, String pwd) {
 
+        String[] tokens = user.split("@");
+        String[] tokensSub = userSub.split("@");
+
+        var currentUser = getUser(tokens[0],pwd,tokens[1]);
+
+        if(currentUser == null) {
+            Log.info("User does not exist.");
+            throw new WebApplicationException(Status.NOT_FOUND);
+        }
+
+        if(!currentUser.getPwd().equals(pwd)) {
+            Log.info("Password is incorrect.");
+            throw new WebApplicationException(Status.FORBIDDEN);
+        }
+
+        Feed userFeed = feeds.get(tokensSub[0]);
+        if(userFeed == null) {
+            Log.info("User to be subscribed does not exist.");
+            throw new WebApplicationException(Status.NOT_FOUND);
+        }
+
+        userFeed.subUser(user);
     }
 
     @Override
     public void unsubscribeUser(String user, String userSub, String pwd) {
 
+        String[] tokens = user.split("@");
+
+        var currentUser = getUser(tokens[0],pwd,tokens[1]);
+
+        if(currentUser == null) {
+            Log.info("User does not exist.");
+            throw new WebApplicationException(Status.NOT_FOUND);
+        }
+
+        if(!currentUser.getPwd().equals(pwd)) {
+            Log.info("Password is incorrect.");
+            throw new WebApplicationException(Status.FORBIDDEN);
+        }
+
+        Feed userFeed = feeds.get(userSub);
+        if(userFeed == null) {
+            Log.info("User to be subscribed does not exist.");
+            throw new WebApplicationException(Status.NOT_FOUND);
+        }
+
+        userFeed.unsubUser(user);
     }
 
     @Override
     public List<String> listSubs(String user) {
-        return null;
+
+        String[] tokens = user.split("@");
+
+        Feed userFeed = feeds.get(tokens[0]);
+        if(userFeed == null) {
+            Log.info("User to be subscribed does not exist.");
+            throw new WebApplicationException(Status.NOT_FOUND);
+        }
+
+        return userFeed.getUserSubs();
     }
 
     private User getUser(String user, String pwd,String serviceName) {
@@ -136,5 +211,15 @@ public class FeedResource implements FeedsService {
 
         var result = new RestFeedServer(uris[0]).getUser(user,pwd);
         return result;
+    }
+
+    private void propagateMessage(Message msg, String userName) {
+        List<String> userSubs = feeds.get(userName).getUserSubs();
+
+        List<String> domains = userSubs; // get domains
+
+        for(String domain : domains) {
+            // post com a msg e o user que postou a mensagem
+        }
     }
 }
