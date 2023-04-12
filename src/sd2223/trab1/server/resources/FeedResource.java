@@ -10,6 +10,7 @@ import sd2223.trab1.api.rest.FeedsService;
 import sd2223.trab1.clients.RestFeedServer;
 
 import java.net.URI;
+import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,10 +40,7 @@ public class FeedResource implements FeedsService {
             throw new WebApplicationException(Status.BAD_REQUEST);
         }
 
-        String serviceName = domain + ":users";
-        // Check if the user exists and the pwd is correct
-        var currentUser = getUser(user, pwd, serviceName);
-
+        String[] tokens = user.split("@");
 
         // Check if the domain in the message is the server domain
         if (!msg.getDomain().equals(domain)) {
@@ -50,16 +48,30 @@ public class FeedResource implements FeedsService {
             throw new WebApplicationException(Status.BAD_REQUEST);
         }
 
+        String serviceName = domain + ":users";
+        // Check if the user exists and the pwd is correct
+        var currentUser = getUser(tokens[0], pwd, serviceName);
+
+        if( currentUser == null) {
+            Log.info("Publisher does not exist in current domain.");
+            throw new WebApplicationException(Status.NOT_FOUND);
+        }
+
         if( msg.getId() == -1) {
             // Generate mid
             msg.setId(3);
             // Propagate msg
         }
+        msg.setCreationTime(System.currentTimeMillis());
 
         Feed userFeed = feeds.get(currentUser.getName());
+        if(userFeed == null) {
+            userFeed = new Feed(user,domain);
+            feeds.put(currentUser.getName(),userFeed);
+        }
         userFeed.postMessage(msg);
 
-        return 0;
+        return 3;
     }
 
     @Override
@@ -69,12 +81,38 @@ public class FeedResource implements FeedsService {
 
     @Override
     public Message getMessage(String user, long mid) {
-        return null;
+
+        String[] tokens = user.split("@");
+
+        Feed feed = feeds.get(tokens[0]);
+        if (feed == null) {
+            Log.info("User or Message does not exist.");
+            throw new WebApplicationException(Status.NOT_FOUND);
+        }
+
+        Message msg = feed.getMessage(mid);
+        if(msg == null) {
+            Log.info("Message does not exist.");
+            throw new WebApplicationException(Status.NOT_FOUND);
+        }
+
+        return msg;
     }
 
     @Override
     public List<Message> getMessages(String user, long time) {
-        return null;
+
+        String[] tokens = user.split("@");
+
+        Feed feed = feeds.get(tokens[0]);
+        if (feed == null) {
+            Log.info("User does not exist.");
+            throw new WebApplicationException(Status.NOT_FOUND);
+        }
+
+        List<Message> messageList = feed.getMessages(time);
+
+        return messageList;
     }
 
     @Override
@@ -99,5 +137,4 @@ public class FeedResource implements FeedsService {
         var result = new RestFeedServer(uris[0]).getUser(user,pwd);
         return result;
     }
-
 }
