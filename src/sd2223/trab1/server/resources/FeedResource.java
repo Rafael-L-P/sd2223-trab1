@@ -46,7 +46,7 @@ public class FeedResource implements FeedsService {
 
         // Check if the domain in the message is the server domain
         if (!msg.getDomain().equals(domain)) {
-            Log.info("Incorret Message domain");
+            Log.info("Incorrect Message domain");
             throw new WebApplicationException(Status.BAD_REQUEST);
         }
 

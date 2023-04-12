@@ -143,7 +143,7 @@ public class UsersResource implements UsersService {
 	public List<User> searchUsers(String pattern) {
 		List<User> result = new ArrayList<User>();
 		users.values().stream().forEach(u -> {
-			if (u.getDisplayName().
+			if (u.getName().
 					indexOf(pattern) != -1)
 				result.add(new User(u.getName(), u.getPwd(), u.getDomain(), u.getDisplayName()));
 		});

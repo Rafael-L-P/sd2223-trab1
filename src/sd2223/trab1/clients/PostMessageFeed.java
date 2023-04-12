@@ -31,7 +31,6 @@ public class PostMessageFeed {
 
         Log.info("Sending request to server.");
 
-        //  Todo
         var result = new RestMessageClient(URI.create(serverUrl)).postMessage(user,pwd,msg);
         System.out.println("Result: " + result);
     }
