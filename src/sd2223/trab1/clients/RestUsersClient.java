@@ -21,7 +21,7 @@ public class RestUsersClient extends RestClient implements UsersService {
 		target = client.target( serverURI ).path( UsersService.PATH );
 	}
 	
-	private String clt_createUser( User user) {
+	private String clt_createUser(User user) {
 		
 		Response r = target.request()
 				.accept(MediaType.APPLICATION_JSON)

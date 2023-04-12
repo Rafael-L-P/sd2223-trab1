@@ -15,8 +15,9 @@ public class PostMessageFeed {
 
     public static void main(String[] args) throws IOException {
 
-        if (args.length != 3) {
+        if (args.length != 3) { // deveria ser != 5 (?)
             System.err.println("Use: java sd2223.trab1.clients.PostMessageFeed user msg pwd");
+            // System.err.println("Use: java sd2223.trab1.clients.PostMessageFeed url user pwd domain text"); (?)
             return;
         }
 

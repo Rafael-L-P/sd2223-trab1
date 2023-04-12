@@ -1,18 +1,22 @@
 package sd2223.trab1.clients;
 
+import sd2223.trab1.api.Message;
 import sd2223.trab1.api.User;
 
 import java.net.URI;
 
 public class RestFeedServer {
 
-    private RestUsersClient client;
+    private RestUsersClient userClient;
+
+    private RestMessageClient messageClient;
 
     public RestFeedServer( URI serverURI ) {
-         client = new RestUsersClient(serverURI);
+         userClient = new RestUsersClient(serverURI);
     }
 
-    public User getUser(String name, String pwd) {
-        return client.getUser(name,pwd);
+    public User getUser(String name, String pwd) { return userClient.getUser(name,pwd);
     }
+
+    public void propagateMessage(Message msg, String user) { messageClient.propagateMessage(msg,user);}
 }

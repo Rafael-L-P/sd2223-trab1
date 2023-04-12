@@ -1,6 +1,7 @@
 package sd2223.trab1.server.resources;
 
 import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.client.WebTarget;
 import jakarta.ws.rs.core.Response.Status;
 import sd2223.trab1.api.Discovery;
 import sd2223.trab1.api.Feed;
@@ -11,6 +12,7 @@ import sd2223.trab1.clients.RestFeedServer;
 
 import java.net.URI;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -80,7 +82,7 @@ public class FeedResource implements FeedsService {
 
         String[] tokens = user.split("@");
 
-        var currentUser = getUser(tokens[0],pwd,tokens[1]);
+        var currentUser = getUser(tokens[0],pwd,tokens[1]+":users");
 
         if(currentUser == null) {
             Log.info("User does not exist.");
@@ -98,7 +100,7 @@ public class FeedResource implements FeedsService {
             Log.info("Message does not exist in the server.");
             throw new WebApplicationException(Status.NOT_FOUND);
         }
-        
+
         userFeed.removeMessage(mid);
     }
 
@@ -144,7 +146,7 @@ public class FeedResource implements FeedsService {
         String[] tokens = user.split("@");
         String[] tokensSub = userSub.split("@");
 
-        var currentUser = getUser(tokens[0],pwd,tokens[1]);
+        var currentUser = getUser(tokens[0],pwd,tokens[1]+":users");
 
         if(currentUser == null) {
             Log.info("User does not exist.");
@@ -170,7 +172,7 @@ public class FeedResource implements FeedsService {
 
         String[] tokens = user.split("@");
 
-        var currentUser = getUser(tokens[0],pwd,tokens[1]);
+        var currentUser = getUser(tokens[0],pwd,tokens[1]+":users");
 
         if(currentUser == null) {
             Log.info("User does not exist.");
@@ -205,6 +207,14 @@ public class FeedResource implements FeedsService {
         return userFeed.getUserSubs();
     }
 
+    @Override
+    public void updateFeeds(Message msg, String user) {
+        feeds.forEach((k,feed) -> {
+            if(feed.getUserSubs().contains(user))
+                feed.postMessage(msg);
+        });
+    }
+
     private User getUser(String user, String pwd,String serviceName) {
         // Use discovery to get the userservice uri
         URI[] uris = dis.knownUrisOf(serviceName,1);
@@ -216,10 +226,18 @@ public class FeedResource implements FeedsService {
     private void propagateMessage(Message msg, String userName) {
         List<String> userSubs = feeds.get(userName).getUserSubs();
 
-        List<String> domains = userSubs; // get domains
+        List<String> domains = new ArrayList<String>();
+
+        userSubs.forEach( (sub) -> {
+            String[] tokens = sub.split("@");
+            if(!domains.contains(tokens[1]))
+                domains.add(tokens[1]);
+        });
 
         for(String domain : domains) {
-            // post com a msg e o user que postou a mensagem
+            URI[] uris = dis.knownUrisOf(domain+":users", 1);
+
+            new RestFeedServer(uris[0]).propagateMessage(msg,userName);
         }
     }
 }

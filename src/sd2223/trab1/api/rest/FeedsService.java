@@ -14,6 +14,8 @@ import jakarta.ws.rs.core.MediaType;
 import sd2223.trab1.api.Message;
 import sd2223.trab1.api.User;
 
+import javax.print.attribute.standard.Media;
+
 @Path(FeedsService.PATH)
 public interface FeedsService {
 	
@@ -23,6 +25,8 @@ public interface FeedsService {
 	String TIME = "time";
 	String DOMAIN = "domain";
 	String USERSUB = "userSub";
+
+	String MESSAGE = "msg";
 	
 	String PATH = "/feeds";
 	/**
@@ -138,4 +142,11 @@ public interface FeedsService {
 	@Path("/sub/list/{" + USER + "}")
 	@Produces(MediaType.APPLICATION_JSON)
 	List<String> listSubs(@PathParam(USER) String user);
+
+	@POST
+	@Path("/{" + MESSAGE + "}/{" + USER + "}")
+	@Produces(MediaType.APPLICATION_JSON)
+	void updateFeeds(@PathParam(MESSAGE) Message msg, @PathParam(USER) String user);
+
+	void propagateMessage(Message msg, String user);
 }
