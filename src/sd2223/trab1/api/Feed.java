@@ -12,13 +12,15 @@ public class Feed {
     private String user;
     private String domain;
     private Map<Long,Message> messageList;
-    private List<String> userSubs;
+    private List<String> followers;
+    private List<String> following;
 
     public Feed(String user,String domain) {
         this.user = user;
         this.domain = domain;
         messageList = new HashMap<Long,Message>();
-        userSubs = new ArrayList<String>();
+        followers = new ArrayList<String>();
+        following = new ArrayList<String>();
     }
 
     public void postMessage(Message msg) {
@@ -30,12 +32,16 @@ public class Feed {
     }
 
     public void subUser(String user) {
-        userSubs.add(user);
+        following.add(user);
     }
 
     public void unsubUser(String user) {
-        userSubs.remove(user);
+        following.remove(user);
     }
+
+    public void addFollower(String user) { followers.add(user);}
+
+    public void removeFollower(String user) { followers.remove(user);}
 
     public Message getMessage(long mid) {
         return messageList.get(mid);
@@ -55,6 +61,6 @@ public class Feed {
     }
 
     public  List<String> getUserSubs() {
-        return userSubs;
+        return following;
     }
 }

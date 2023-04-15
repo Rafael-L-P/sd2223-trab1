@@ -150,6 +150,8 @@ public class FeedResource implements FeedsService {
     @Override
     public void subUser(String user, String userSub, String pwd) {
 
+        Log.info("SubUser : User: " + user + "; Subscribed User: " + userSub + "; pwd: " + pwd);
+
         String[] tokens = user.split("@");
         String[] tokensSub = userSub.split("@");
 
@@ -174,13 +176,20 @@ public class FeedResource implements FeedsService {
             throw new WebApplicationException(Status.NOT_FOUND);
         }
 
-        Feed userFeed = feeds.get(tokensSub[0]);
-        if(userFeed == null) {
-            userFeed = new Feed(tokensSub[0],tokensSub[1]);
-            feeds.put(tokensSub[0], userFeed);
+        Feed subFeed = feeds.get(tokensSub[0]);
+        if(subFeed == null) {
+            subFeed = new Feed(tokensSub[0],tokensSub[1]);
+            feeds.put(tokensSub[0], subFeed);
         }
 
-        userFeed.subUser(user);
+        Feed userFeed = feeds.get(tokens[0]);
+        if(userFeed == null) {
+            userFeed = new Feed(tokens[0],tokens[1]);
+            feeds.put(tokens[0], userFeed);
+        }
+
+        userFeed.subUser(userSub);
+        subFeed.addFollower(user);
     }
 
     @Override
@@ -210,10 +219,17 @@ public class FeedResource implements FeedsService {
 
         String[] tokens = user.split("@");
 
+        String serviceName = tokens[1] + ":users";
+
+        if(!hasUser(tokens[0],serviceName)) {
+            Log.info("User does not exist.");
+            throw new WebApplicationException(Status.NOT_FOUND);
+        }
+
         Feed userFeed = feeds.get(tokens[0]);
         if(userFeed == null) {
-            Log.info("User to be subscribed does not exist.");
-            throw new WebApplicationException(Status.NOT_FOUND);
+            userFeed = new Feed(tokens[0],tokens[1]);
+            feeds.put(tokens[0], userFeed);
         }
 
         return userFeed.getUserSubs();
