@@ -73,7 +73,7 @@ public class FeedResource implements FeedsService {
             // Generate mid
             msg.setId(count++);
             // Propagate msg
-            //propagateMessage(msg, tokens[0]);
+            propagateMessage(msg, tokens[0]);
         }
         msg.setCreationTime(System.currentTimeMillis());
 
@@ -196,22 +196,42 @@ public class FeedResource implements FeedsService {
     public void unsubscribeUser(String user, String userSub, String pwd) {
 
         String[] tokens = user.split("@");
+        String[] tokensSub = userSub.split("@");
 
         String serviceName = tokens[1] + ":users";
-        var currentUser = getUser(tokens[0],pwd,serviceName);
 
-        if(currentUser == null) {
+        if(!hasUser(tokens[0], serviceName)) {
             Log.info("User does not exist.");
             throw new WebApplicationException(Status.NOT_FOUND);
         }
 
-        Feed userFeed = feeds.get(userSub);
-        if(userFeed == null) {
+        var currentUser = getUser(tokens[0],pwd,serviceName);
+
+        if(currentUser == null) {
+            Log.info("Password is incorrect.");
+            throw new WebApplicationException(Status.FORBIDDEN);
+        }
+
+        String subServiceName = tokensSub[1] + ":users";
+        if(!hasUser(tokensSub[0],subServiceName)) {
             Log.info("User to be subscribed does not exist.");
             throw new WebApplicationException(Status.NOT_FOUND);
         }
 
-        userFeed.unsubUser(user);
+        Feed subFeed = feeds.get(tokensSub[0]);
+        if(subFeed == null) {
+            subFeed = new Feed(tokensSub[0],tokensSub[1]);
+            feeds.put(tokensSub[0], subFeed);
+        }
+
+        Feed userFeed = feeds.get(tokens[0]);
+        if(userFeed == null) {
+            userFeed = new Feed(tokens[0],tokens[1]);
+            feeds.put(tokens[0], userFeed);
+        }
+
+        userFeed.unsubUser(userSub);
+        subFeed.removeFollower(user);
     }
 
     @Override
@@ -235,13 +255,13 @@ public class FeedResource implements FeedsService {
         return userFeed.getUserSubs();
     }
 
-    /*@Override
+    @Override
     public void updateFeeds(Message msg, String user) {
         feeds.forEach((k,feed) -> {
             if(feed.getUserSubs().contains(user))
                 feed.postMessage(msg);
         });
-    }*/
+    }
 
     private User getUser(String user, String pwd,String serviceName) {
         // Use discovery to get the userservice uri
@@ -258,7 +278,7 @@ public class FeedResource implements FeedsService {
         return result;
     }
 
-    /*private void propagateMessage(Message msg, String userName) {
+    private void propagateMessage(Message msg, String userName) {
         List<String> userSubs = feeds.get(userName).getUserSubs();
 
         List<String> domains = new ArrayList<String>();
@@ -274,5 +294,5 @@ public class FeedResource implements FeedsService {
 
             new RestFeedServer(uris[0]).propagateMessage(msg,userName);
         }
-    } */
+    }
 }
