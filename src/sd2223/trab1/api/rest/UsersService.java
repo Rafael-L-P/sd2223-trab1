@@ -94,4 +94,9 @@ public interface UsersService {
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	List<User> searchUsers(@QueryParam(QUERY) String pattern);
+
+	@GET
+	@Path("/hasUser/{" + NAME + "}")
+	@Produces(MediaType.APPLICATION_JSON)
+	boolean hasUser(@PathParam(NAME) String name);
 }

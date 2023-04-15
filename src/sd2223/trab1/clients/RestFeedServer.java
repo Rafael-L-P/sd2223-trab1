@@ -13,10 +13,13 @@ public class RestFeedServer {
 
     public RestFeedServer( URI serverURI ) {
          userClient = new RestUsersClient(serverURI);
+         messageClient = new RestMessageClient(serverURI);
     }
 
     public User getUser(String name, String pwd) { return userClient.getUser(name,pwd);
     }
 
-    public void propagateMessage(Message msg, String user) { messageClient.propagateMessage(msg,user);}
+    public boolean hasUser(String name) { return userClient.hasUser(name);}
+
+    //public void propagateMessage(Message msg, String user) { messageClient.propagateMessage(msg,user);}
 }

@@ -149,5 +149,10 @@ public class UsersResource implements UsersService {
 		});
 		return result;
 	}
+
+	@Override
+	public boolean hasUser(String name) {
+		return users.containsKey(name);
+	}
 }
 

@@ -143,10 +143,10 @@ public interface FeedsService {
 	@Produces(MediaType.APPLICATION_JSON)
 	List<String> listSubs(@PathParam(USER) String user);
 
-	@POST
+	/*@POST
 	@Path("/{" + MESSAGE + "}/{" + USER + "}")
 	@Produces(MediaType.APPLICATION_JSON)
 	void updateFeeds(@PathParam(MESSAGE) Message msg, @PathParam(USER) String user);
 
-	void propagateMessage(Message msg, String user);
+	void propagateMessage(Message msg, String user); */
 }

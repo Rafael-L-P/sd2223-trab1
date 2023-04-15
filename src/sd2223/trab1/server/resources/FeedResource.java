@@ -26,16 +26,20 @@ public class FeedResource implements FeedsService {
     private String domain;
     private int serverID;
     private Discovery dis;
+    private int count;
 
     public FeedResource(String domain, int serverID) {
         this.domain = domain;
         this.serverID = serverID;
         this.dis = Discovery.getInstance();
+        this.count = 0;
     }
 
 
     @Override
     public long postMessage(String user, String pwd, Message msg) {
+
+        Log.info("Post Message: user: " + user + " pwd: " + pwd + " msg: " + msg);
 
         if (user == null || pwd == null || msg == null) {
             Log.info("Name, Password or Message null.");
@@ -51,19 +55,25 @@ public class FeedResource implements FeedsService {
         }
 
         String serviceName = domain + ":users";
-        // Check if the user exists and the pwd is correct
-        var currentUser = getUser(tokens[0], pwd, serviceName);
 
-        if( currentUser == null) {
+        if(!hasUser(tokens[0], serviceName)) {
             Log.info("Publisher does not exist in current domain.");
             throw new WebApplicationException(Status.NOT_FOUND);
         }
 
+        // Check if the user exists and the pwd is correct
+        var currentUser = getUser(tokens[0], pwd, serviceName);
+
+        if(currentUser == null) {
+            Log.info("Password is incorrect.");
+            throw new WebApplicationException(Status.FORBIDDEN);
+        }
+
         if( msg.getId() == -1) {
             // Generate mid
-            msg.setId(3);
+            msg.setId(count++);
             // Propagate msg
-            propagateMessage(msg, tokens[0]);
+            //propagateMessage(msg, tokens[0]);
         }
         msg.setCreationTime(System.currentTimeMillis());
 
@@ -72,9 +82,10 @@ public class FeedResource implements FeedsService {
             userFeed = new Feed(user,domain);
             feeds.put(currentUser.getName(),userFeed);
         }
+
         userFeed.postMessage(msg);
 
-        return 3;
+        return count - 1;
     }
 
     @Override
@@ -82,16 +93,12 @@ public class FeedResource implements FeedsService {
 
         String[] tokens = user.split("@");
 
-        var currentUser = getUser(tokens[0],pwd,tokens[1]+":users");
+        String serviceName = tokens[1] + ":users";
+        var currentUser = getUser(tokens[0],pwd,serviceName);
 
         if(currentUser == null) {
             Log.info("User does not exist.");
             throw new WebApplicationException(Status.NOT_FOUND);
-        }
-
-        if(!currentUser.getPwd().equals(pwd)) {
-            Log.info("Password is incorrect.");
-            throw new WebApplicationException(Status.FORBIDDEN);
         }
 
         Feed userFeed = feeds.get(tokens[0]);
@@ -146,22 +153,31 @@ public class FeedResource implements FeedsService {
         String[] tokens = user.split("@");
         String[] tokensSub = userSub.split("@");
 
-        var currentUser = getUser(tokens[0],pwd,tokens[1]+":users");
+        String serviceName = tokens[1] + ":users";
 
-        if(currentUser == null) {
-            Log.info("User does not exist.");
+        if(!hasUser(tokens[0], serviceName)) {
+            Log.info("User to be subscribed does not exist.");
             throw new WebApplicationException(Status.NOT_FOUND);
         }
 
-        if(!currentUser.getPwd().equals(pwd)) {
+        var currentUser = getUser(tokens[0],pwd,serviceName);
+
+        if(currentUser == null) {
             Log.info("Password is incorrect.");
             throw new WebApplicationException(Status.FORBIDDEN);
         }
 
-        Feed userFeed = feeds.get(tokensSub[0]);
-        if(userFeed == null) {
+        String subServiceName = tokensSub[1] + ":users";
+
+        if(!hasUser(tokensSub[0], subServiceName)) {
             Log.info("User to be subscribed does not exist.");
             throw new WebApplicationException(Status.NOT_FOUND);
+        }
+
+        Feed userFeed = feeds.get(tokensSub[0]);
+        if(userFeed == null) {
+            userFeed = new Feed(tokensSub[0],tokensSub[1]);
+            feeds.put(tokensSub[0], userFeed);
         }
 
         userFeed.subUser(user);
@@ -172,16 +188,12 @@ public class FeedResource implements FeedsService {
 
         String[] tokens = user.split("@");
 
-        var currentUser = getUser(tokens[0],pwd,tokens[1]+":users");
+        String serviceName = tokens[1] + ":users";
+        var currentUser = getUser(tokens[0],pwd,serviceName);
 
         if(currentUser == null) {
             Log.info("User does not exist.");
             throw new WebApplicationException(Status.NOT_FOUND);
-        }
-
-        if(!currentUser.getPwd().equals(pwd)) {
-            Log.info("Password is incorrect.");
-            throw new WebApplicationException(Status.FORBIDDEN);
         }
 
         Feed userFeed = feeds.get(userSub);
@@ -207,13 +219,13 @@ public class FeedResource implements FeedsService {
         return userFeed.getUserSubs();
     }
 
-    @Override
+    /*@Override
     public void updateFeeds(Message msg, String user) {
         feeds.forEach((k,feed) -> {
             if(feed.getUserSubs().contains(user))
                 feed.postMessage(msg);
         });
-    }
+    }*/
 
     private User getUser(String user, String pwd,String serviceName) {
         // Use discovery to get the userservice uri
@@ -223,7 +235,14 @@ public class FeedResource implements FeedsService {
         return result;
     }
 
-    private void propagateMessage(Message msg, String userName) {
+    private boolean hasUser(String user, String serviceName) {
+        URI[] uris = dis.knownUrisOf(serviceName, 1);
+
+        var result = new RestFeedServer(uris[0]).hasUser(user);
+        return result;
+    }
+
+    /*private void propagateMessage(Message msg, String userName) {
         List<String> userSubs = feeds.get(userName).getUserSubs();
 
         List<String> domains = new ArrayList<String>();
@@ -234,10 +253,10 @@ public class FeedResource implements FeedsService {
                 domains.add(tokens[1]);
         });
 
-        for(String domain : domains) {
-            URI[] uris = dis.knownUrisOf(domain+":users", 1);
+        for(String dom : domains) {
+            URI[] uris = dis.knownUrisOf(dom+":users", 1);
 
             new RestFeedServer(uris[0]).propagateMessage(msg,userName);
         }
-    }
+    } */
 }

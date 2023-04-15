@@ -73,7 +73,7 @@ public class RestMessageClient extends RestClient implements FeedsService {
 
     @Override
     public void removeFromPersonalFeed(String user, long mid, String pwd) {
-        super.reTry( () -> clt_removeFromPersonalFeed(user,mid,pwd));
+        //super.reTry( () -> clt_removeFromPersonalFeed(user,mid,pwd));
     }
 
     @Override
@@ -88,7 +88,7 @@ public class RestMessageClient extends RestClient implements FeedsService {
 
     @Override
     public void subUser(String user, String userSub, String pwd) {
-        super.reTry( () -> clt_subUser(user,userSub,pwd));
+        //super.reTry( () -> clt_subUser(user,userSub,pwd));
     }
 
     @Override
@@ -101,15 +101,15 @@ public class RestMessageClient extends RestClient implements FeedsService {
         return null;
     }
 
-    @Override
+    /*@Override
     public void updateFeeds(Message msg, String user) {
 
     }
 
     @Override
     public void propagateMessage(Message msg, String user) {
-        super.reTry( () -> clt_propagateMessage(msg,user));
+        //super.reTry( () -> clt_propagateMessage(msg,user));
     }
-
+       */
 
 }

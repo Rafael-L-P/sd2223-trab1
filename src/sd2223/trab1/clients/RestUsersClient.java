@@ -75,7 +75,7 @@ public class RestUsersClient extends RestClient implements UsersService {
 		if ( r.getStatus() == Status.OK.getStatusCode() && r.hasEntity() )
 			return r.readEntity(User.class);
 		else
-			System.out.println("Error, HTTP errror status: " + r.getStatus());
+			System.out.println("Error, HTTP error status: " + r.getStatus());
 
 		return null;
 	}
@@ -89,9 +89,23 @@ public class RestUsersClient extends RestClient implements UsersService {
 		if ( r.getStatus() == Status.OK.getStatusCode() && r.hasEntity() )
 			return r.readEntity(new GenericType<List<User>>() {});
 		else
-			System.out.println("Error, HTTP errror status: " + r.getStatus());
+			System.out.println("Error, HTTP error status: " + r.getStatus());
 
 		return null;
+	}
+
+	private boolean clt_hasUser(String name) {
+
+		Response r = target.path("hasUser/" + name).request()
+				.accept(MediaType.APPLICATION_JSON)
+				.get();
+
+		if( r.getStatus() == Status.OK.getStatusCode() && r.hasEntity() )
+			return r.readEntity(Boolean.class);
+		else
+			System.out.println("Error, HTTP error status from restusersclient: " + r.getStatus());
+
+		return false;
 	}
 	
 	@Override
@@ -114,4 +128,9 @@ public class RestUsersClient extends RestClient implements UsersService {
 
 	@Override
 	public List<User> searchUsers(String pattern) { return super.reTry( () -> clt_searchUsers(pattern) ); }
+
+	@Override
+	public boolean hasUser(String name) {
+		return super.reTry( () -> clt_hasUser(name));
+	}
 }
