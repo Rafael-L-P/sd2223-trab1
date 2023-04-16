@@ -32,7 +32,7 @@ public class RESTUsersServer {
         try {
 
             ResourceConfig config = new ResourceConfig();
-            config.register(UsersResource.class);
+            config.register(new UsersResource(domain));
             //config.register(CustomLoggingFilter.class);
 
             String ip = InetAddress.getLocalHost().getHostAddress();

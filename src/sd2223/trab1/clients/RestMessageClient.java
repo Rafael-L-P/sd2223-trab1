@@ -56,14 +56,37 @@ public class RestMessageClient extends RestClient implements FeedsService {
             System.out.println("Error, HTTP error status " + r.getStatus());
     }
 
-    private void clt_propagateMessage(Message msg, String user) {
-
-        Response r = target.path(msg + "/" + user)
-                .request().accept(MediaType.APPLICATION_JSON)
+    private int clt_updateFeeds(Message msg, String user, String secret) {
+        Response r = target.path( "/update/feed/" + user)
+                .queryParam(FeedsService.SECRET, secret).request()
                 .post(Entity.entity(msg, MediaType.APPLICATION_JSON));
 
         if( r.getStatus() != Status.OK.getStatusCode() || !r.hasEntity())
             System.out.println("Error, HTTP error status " + r.getStatus());
+
+        return 0;
+    }
+
+    private int clt_removeFollower(String user,String userSub,String secret) {
+        Response r = target.path("/remove/sub/" + user + "/" + userSub)
+                .queryParam(FeedsService.SECRET, secret).request()
+                .delete();
+
+        if( r.getStatus() != Status.OK.getStatusCode() || !r.hasEntity())
+            System.out.println("Error, HTTP error status " + r.getStatus());
+
+        return 0;
+    }
+
+    private int clt_deleteUser(String user, String secret) {
+        Response r = target.path("/delete/" + user )
+                .queryParam(FeedsService.SECRET, secret).request()
+                .delete();
+
+        if( r.getStatus() != Status.OK.getStatusCode() || !r.hasEntity())
+            System.out.println("Error, HTTP error status " + r.getStatus());
+
+        return 0;
     }
 
     @Override
@@ -101,15 +124,19 @@ public class RestMessageClient extends RestClient implements FeedsService {
         return null;
     }
 
-    /*@Override
-    public void updateFeeds(Message msg, String user) {
-
+    @Override
+    public void updateFeeds(Message msg, String user,String secret) {
+        super.reTry( () -> clt_updateFeeds(msg,user,secret));
     }
 
     @Override
-    public void propagateMessage(Message msg, String user) {
-        //super.reTry( () -> clt_propagateMessage(msg,user));
+    public void removeFollower(String user, String subUser,String secret) {
+        super.reTry( () -> clt_removeFollower(user,subUser,secret));
     }
-       */
+
+    @Override
+    public void deleteUser(String user, String secret) {
+        super.reTry( () -> clt_deleteUser(user,secret));
+    }
 
 }

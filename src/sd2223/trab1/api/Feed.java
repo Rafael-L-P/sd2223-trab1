@@ -32,14 +32,18 @@ public class Feed {
     }
 
     public void subUser(String user) {
-        following.add(user);
+        if (!following.contains(user))
+            following.add(user);
     }
 
     public void unsubUser(String user) {
         following.remove(user);
     }
 
-    public void addFollower(String user) { followers.add(user);}
+    public void addFollower(String user) {
+        if (!followers.contains(user))
+            followers.add(user);
+    }
 
     public void removeFollower(String user) { followers.remove(user);}
 
@@ -63,4 +67,6 @@ public class Feed {
     public  List<String> getUserSubs() {
         return following;
     }
+
+    public List<String> getFollowers() {return followers;}
 }

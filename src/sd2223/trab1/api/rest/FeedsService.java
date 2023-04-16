@@ -25,7 +25,7 @@ public interface FeedsService {
 	String TIME = "time";
 	String DOMAIN = "domain";
 	String USERSUB = "userSub";
-
+	String SECRET = "secret";
 	String MESSAGE = "msg";
 	
 	String PATH = "/feeds";
@@ -143,10 +143,26 @@ public interface FeedsService {
 	@Produces(MediaType.APPLICATION_JSON)
 	List<String> listSubs(@PathParam(USER) String user);
 
-	/*@POST
-	@Path("/{" + MESSAGE + "}/{" + USER + "}")
-	@Produces(MediaType.APPLICATION_JSON)
-	void updateFeeds(@PathParam(MESSAGE) Message msg, @PathParam(USER) String user);
 
-	void propagateMessage(Message msg, String user); */
+	/**
+	 * Post the Message of the user in the feeds of those who follow him.
+	 *
+	 * @param msg the message to be posted in the feeds
+	 * @param user the owner of the message
+	 * @param secret a keyword to prove the authenticity of the sernder
+	 * @return 200 if ok
+	 * 		   403 is generated if the secret is wrong
+	 */
+	@POST
+	@Path("/update/feed/{" + USER + "}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	void updateFeeds(Message msg, @PathParam(USER) String user, @QueryParam(SECRET) String secret);
+
+	@DELETE
+	@Path("/remove/sub/{" + USER + "}/{" + USERSUB +"}")
+	void removeFollower (@PathParam(USER) String user,@PathParam(USERSUB) String subUser,@QueryParam(SECRET) String secret);
+
+	@DELETE
+	@Path("/delete/{"+USER+"}")
+	void deleteUser(@PathParam(USER) String user,@QueryParam(SECRET) String secret);
 }

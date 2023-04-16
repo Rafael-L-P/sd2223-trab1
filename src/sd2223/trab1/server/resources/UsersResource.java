@@ -1,24 +1,33 @@
 package sd2223.trab1.server.resources;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import sd2223.trab1.api.Discovery;
 import sd2223.trab1.api.User;
 import sd2223.trab1.api.rest.UsersService;
 import jakarta.inject.Singleton;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response.Status;
+import sd2223.trab1.clients.RestUserServer;
 
 @Singleton
 public class UsersResource implements UsersService {
-
+	private final static String USER_SERVICE = ":users";
+	private final static String FEED_SERVICE = ":feeds";
+	private final static String SECRET = "3Hc4q";
 	private final Map<String, User> users = new HashMap<>();
 	private static Logger Log = Logger.getLogger(UsersResource.class.getName());
+	private String domain;
+	private Discovery dis;
 
-	public UsersResource() {
+	public UsersResource(String domain) {
+		this.domain = domain;
+		this.dis = Discovery.getInstance();
 	}
 
 	@Override
@@ -135,7 +144,7 @@ public class UsersResource implements UsersService {
 		}
 
 		users.remove(name);
-
+		deleteUserFeed(name);
 		return currentUser;
 	}
 
@@ -153,6 +162,12 @@ public class UsersResource implements UsersService {
 	@Override
 	public boolean hasUser(String name) {
 		return users.containsKey(name);
+	}
+
+	public void deleteUserFeed(String user) {
+		URI[] uri = dis.knownUrisOf(domain+FEED_SERVICE, 1);
+
+		new RestUserServer(uri[0]).deleteUser(user,SECRET);
 	}
 }
 

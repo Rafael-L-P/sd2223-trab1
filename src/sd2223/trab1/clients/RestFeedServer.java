@@ -21,5 +21,7 @@ public class RestFeedServer {
 
     public boolean hasUser(String name) { return userClient.hasUser(name);}
 
-    //public void propagateMessage(Message msg, String user) { messageClient.propagateMessage(msg,user);}
+    public void updateFeeds(Message msg, String user, String secret) { messageClient.updateFeeds(msg,user,secret);}
+
+    public void removeFollower(String user,String userSub,String secret) { messageClient.removeFollower(user,userSub,secret);}
 }
