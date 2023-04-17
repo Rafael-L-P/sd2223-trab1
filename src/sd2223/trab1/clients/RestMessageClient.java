@@ -42,7 +42,6 @@ public class RestMessageClient extends RestClient implements FeedsService {
     }
 
     private void clt_removeFromPersonalFeed(String user, long mid, String pwd) {
-
         Response r = target.path(user + "/" + mid)
                 .queryParam(FeedsService.PWD, pwd).request()
                 .accept(MediaType.APPLICATION_JSON)

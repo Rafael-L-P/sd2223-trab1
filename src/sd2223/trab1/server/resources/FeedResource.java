@@ -268,7 +268,6 @@ public class FeedResource implements FeedsService {
         }
 
         var currentUser = getUser(tokens[0],pwd,serviceName);
-
         if(currentUser == null) {
             Log.info("Password is incorrect.");
             throw new WebApplicationException(Status.FORBIDDEN);
