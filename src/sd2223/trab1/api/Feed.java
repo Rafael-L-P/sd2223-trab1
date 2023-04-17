@@ -69,4 +69,6 @@ public class Feed {
     }
 
     public List<String> getFollowers() {return followers;}
+
+    public String getUser() {return user;}
 }
