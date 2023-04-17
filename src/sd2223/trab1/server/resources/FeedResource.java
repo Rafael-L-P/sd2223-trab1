@@ -34,7 +34,7 @@ public class FeedResource implements FeedsService {
         this.domain = domain;
         this.serverID = serverID;
         this.dis = Discovery.getInstance();
-        this.count = 0;
+        this.count = serverID*10;
     }
 
 
@@ -287,7 +287,6 @@ public class FeedResource implements FeedsService {
         for(Feed feed: feedList) {
             if(feed.getUserSubs().contains(user)) {
                 feed.postMessage(msg);
-                Log.info("Update Feeds: for each - User"+feed.getUser()+"; "+feed.getMessages(0));
             }
         }
     }
@@ -307,7 +306,6 @@ public class FeedResource implements FeedsService {
             feeds.put(tokens[0],feed);
         }
         feed.addFollower(user);
-        Log.info("Add Follower: usersub"+tokens[0]+" contains:"+feed.getFollowers().contains(user));
     }
 
     @Override
@@ -342,19 +340,13 @@ public class FeedResource implements FeedsService {
         List<String> domains = new ArrayList<String>();
         for (String sub: userSubs) {
             String[] tokens = sub.split("@");
-            Log.info("ProMsg: foreach - User:"+tokens[0]);
             if(!domains.contains(tokens[1]) && !domain.equals(tokens[1]))
                 domains.add(tokens[1]);
         }
 
-        if (feeds.containsKey("lemuel.spencer")) {
-            Log.info("ProMsg: lem:"+feeds.containsKey("lemuel.spencer")+"; Crys:"+feeds.get("lemuel.spencer").getFollowers().contains("crystle.hickle@ourorg-1"));
-            Log.info("ProMsg: lem:"+feeds.containsKey("lemuel.spencer")+"; Crys:"+feeds.get("lemuel.spencer").getFollowers().contains("crystle.hickle"));
-        }
 
         for(String dom : domains) {
             URI[] uris = dis.knownUrisOf(dom+FEED_SERVICE, 1);
-            Log.info("PropagateMessage: Domain:"+dom+"; User:"+user+"; mid"+msg.getId());
             new RestFeedServer(uris[0]).updateFeeds(msg,user,SECRET);
         }
         this.updateFeeds(msg,user,SECRET);
