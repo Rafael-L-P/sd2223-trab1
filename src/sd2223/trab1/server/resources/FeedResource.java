@@ -47,16 +47,10 @@ public class FeedResource implements FeedsService {
             throw new WebApplicationException(Status.BAD_REQUEST);
         }
 
-<<<<<<< HEAD
         // Splitting user into name and domain
         String[] tokens = user.split("@");
 
-        // Check if the domain in the user is the server domain
-=======
-        String[] tokens = user.split("@");
-
         // Check if the domain in the message is the server domain
->>>>>>> cbd06a5672af504bb613b126d4e01595a281a091
         if (!tokens[1].equals(domain)) {
             Log.info("Incorrect domain");
             throw new WebApplicationException(Status.BAD_REQUEST);
@@ -375,13 +369,9 @@ public class FeedResource implements FeedsService {
 
     private void propagateMessage(List<String> userSubs,String user,Message msg) {
         List<String> domains = new ArrayList<String>();
-<<<<<<< HEAD
 
-        userSubs.forEach( (sub) -> {
+        for (String sub : userSubs) {
             // Splitting user into name and domain
-=======
-        for (String sub: userSubs) {
->>>>>>> cbd06a5672af504bb613b126d4e01595a281a091
             String[] tokens = sub.split("@");
             if(!domains.contains(tokens[1]) && !domain.equals(tokens[1]))
                 domains.add(tokens[1]);

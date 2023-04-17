@@ -7,10 +7,6 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.Status;
 import sd2223.trab1.api.Message;
 import sd2223.trab1.api.rest.FeedsService;
-<<<<<<< HEAD
-=======
-
->>>>>>> cbd06a5672af504bb613b126d4e01595a281a091
 import java.net.URI;
 import java.util.List;
 

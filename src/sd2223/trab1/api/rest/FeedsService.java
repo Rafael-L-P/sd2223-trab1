@@ -5,10 +5,6 @@ import java.util.List;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import sd2223.trab1.api.Message;
-<<<<<<< HEAD
-
-=======
->>>>>>> cbd06a5672af504bb613b126d4e01595a281a091
 
 @Path(FeedsService.PATH)
 public interface FeedsService {
@@ -152,20 +148,19 @@ public interface FeedsService {
 	@Consumes(MediaType.APPLICATION_JSON)
 	void updateFeeds(Message msg, @PathParam(USER) String user, @QueryParam(SECRET) String secret);
 
-<<<<<<< HEAD
+
 	/**
 	 * Remove a user from the follower list of another user's feed
 	 *
 	 * @param user follower to be removed (format user@domain)
-	 * @param subUser user who is being followed (format user@domain)
+	 * @param userSub user who is being followed (format user@domain)
 	 * @param secret a keyword to prove the authenticity of the sender
 	 */
-=======
 	@POST
 	@Path("/update/subs/{" + USER + "}/{" + USERSUB + "}")
 	void addFollower(@PathParam(USER) String user, @PathParam(USERSUB) String userSub, @QueryParam(SECRET) String secret);
 
->>>>>>> cbd06a5672af504bb613b126d4e01595a281a091
+
 	@DELETE
 	@Path("/update/subs/{" + USER + "}/{" + USERSUB +"}")
 	void removeFollower(@PathParam(USER) String user, @PathParam(USERSUB) String subUser, @QueryParam(SECRET) String secret);
