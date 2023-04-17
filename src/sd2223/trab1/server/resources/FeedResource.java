@@ -1,18 +1,15 @@
 package sd2223.trab1.server.resources;
 
 import jakarta.ws.rs.WebApplicationException;
-import jakarta.ws.rs.client.WebTarget;
 import jakarta.ws.rs.core.Response.Status;
 import sd2223.trab1.api.Discovery;
 import sd2223.trab1.api.Feed;
 import sd2223.trab1.api.Message;
 import sd2223.trab1.api.User;
 import sd2223.trab1.api.rest.FeedsService;
-import sd2223.trab1.api.rest.UsersService;
 import sd2223.trab1.clients.RestFeedServer;
 
 import java.net.URI;
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -50,13 +47,14 @@ public class FeedResource implements FeedsService {
             throw new WebApplicationException(Status.BAD_REQUEST);
         }
 
+        String[] tokens = user.split("@");
+
         // Check if the domain in the message is the server domain
-        if (!msg.getDomain().equals(domain)) {
-            Log.info("Incorrect Message domain");
+        if (!tokens[1].equals(domain)) {
+            Log.info("Incorrect domain");
             throw new WebApplicationException(Status.BAD_REQUEST);
         }
 
-        String[] tokens = user.split("@");
         String serviceName = domain + USER_SERVICE;
 
         if(!hasUser(tokens[0], serviceName)) {
@@ -79,14 +77,14 @@ public class FeedResource implements FeedsService {
         }
         msg.setCreationTime(System.currentTimeMillis());
 
-        Feed userFeed = feeds.get(currentUser.getName());
+        Feed userFeed = feeds.get(tokens[0]);
         if(userFeed == null) {
             userFeed = new Feed(user,domain);
             feeds.put(currentUser.getName(),userFeed);
         }
 
         userFeed.postMessage(msg);
-        propagateMessage(userFeed.getUserSubs(),user,msg);
+        propagateMessage(userFeed.getFollowers(),user,msg);
 
         return count - 1;
     }
@@ -190,14 +188,14 @@ public class FeedResource implements FeedsService {
             feeds.put(tokens[0], userFeed);
         }
 
-        Feed subFeed = feeds.get(tokensSub[0]);
-        if(subFeed == null) {
-            subFeed = new Feed(tokensSub[0],tokensSub[1]);
-            feeds.put(tokensSub[0], subFeed);
+        if (tokensSub[1].equals(domain))
+            addFollower(user,userSub,SECRET);
+        else {
+            subServiceName = tokensSub[1]+FEED_SERVICE;
+            propagateSubUser(user,userSub,subServiceName);
         }
 
         userFeed.subUser(userSub);
-        subFeed.addFollower(user);
     }
 
     @Override
@@ -279,20 +277,37 @@ public class FeedResource implements FeedsService {
 
     @Override
     public void updateFeeds(Message msg, String user,String secret) {
+        Log.info("Update Feeds: User"+user+"; msg: "+msg.getText());
         if (!secret.equals(SECRET)) {
             Log.info("Request reserved to servers.");
             throw new WebApplicationException(Status.FORBIDDEN);
         }
 
-        feeds.forEach((k,feed) -> {
+        List<Feed> feedList = feeds.values().stream().toList();
+        for(Feed feed: feedList) {
             if(feed.getUserSubs().contains(user)) {
                 feed.postMessage(msg);
+                Log.info("Update Feeds: for each - User"+feed.getUser()+"; "+feed.getMessages(0));
             }
-        });
+        }
     }
 
-    public void addFollower (String user, String subUser) {
+    @Override
+    public void addFollower (String user, String userSub, String secret) {
+        Log.info("Add Follower: User:"+user+"; userSub:"+ userSub);
+        if (!secret.equals(SECRET)) {
+            Log.info("Request reserved to servers.");
+            throw new WebApplicationException(Status.FORBIDDEN);
+        }
+        String[] tokens = userSub.split("@");
 
+        Feed feed = feeds.get(tokens[0]);
+        if (feed == null) {
+            feed = new Feed(tokens[0],domain);
+            feeds.put(tokens[0],feed);
+        }
+        feed.addFollower(user);
+        Log.info("Add Follower: usersub"+tokens[0]+" contains:"+feed.getFollowers().contains(user));
     }
 
     @Override
@@ -320,22 +335,26 @@ public class FeedResource implements FeedsService {
             Log.info("Request reserved to servers.");
             throw new WebApplicationException(Status.FORBIDDEN);
         }
-
         feeds.remove(user);
     }
 
     private void propagateMessage(List<String> userSubs,String user,Message msg) {
         List<String> domains = new ArrayList<String>();
-
-        userSubs.forEach( (sub) -> {
+        for (String sub: userSubs) {
             String[] tokens = sub.split("@");
+            Log.info("ProMsg: foreach - User:"+tokens[0]);
             if(!domains.contains(tokens[1]) && !domain.equals(tokens[1]))
                 domains.add(tokens[1]);
-        });
+        }
+
+        if (feeds.containsKey("lemuel.spencer")) {
+            Log.info("ProMsg: lem:"+feeds.containsKey("lemuel.spencer")+"; Crys:"+feeds.get("lemuel.spencer").getFollowers().contains("crystle.hickle@ourorg-1"));
+            Log.info("ProMsg: lem:"+feeds.containsKey("lemuel.spencer")+"; Crys:"+feeds.get("lemuel.spencer").getFollowers().contains("crystle.hickle"));
+        }
 
         for(String dom : domains) {
             URI[] uris = dis.knownUrisOf(dom+FEED_SERVICE, 1);
-
+            Log.info("PropagateMessage: Domain:"+dom+"; User:"+user+"; mid"+msg.getId());
             new RestFeedServer(uris[0]).updateFeeds(msg,user,SECRET);
         }
         this.updateFeeds(msg,user,SECRET);
@@ -347,7 +366,9 @@ public class FeedResource implements FeedsService {
         new RestFeedServer(uris[0]).removeFollower(user,userSub,SECRET);
     }
 
-    private void propagateSubUser(String user,String subUser) {
+    private void propagateSubUser(String user,String subUser,String serviceName) {
+        URI[] uris = dis.knownUrisOf(serviceName, 1);
 
+        new RestFeedServer(uris[0]).addFollower(user,subUser,SECRET);
     }
 }

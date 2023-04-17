@@ -23,5 +23,7 @@ public class RestFeedServer {
 
     public void updateFeeds(Message msg, String user, String secret) { messageClient.updateFeeds(msg,user,secret);}
 
+    public void addFollower(String user,String subUser,String secret) { messageClient.addFollower(user,subUser,secret);}
+
     public void removeFollower(String user,String userSub,String secret) { messageClient.removeFollower(user,userSub,secret);}
 }

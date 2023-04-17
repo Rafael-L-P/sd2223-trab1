@@ -8,7 +8,6 @@ import jakarta.ws.rs.core.Response.Status;
 import sd2223.trab1.api.Message;
 import sd2223.trab1.api.rest.FeedsService;
 
-import javax.print.attribute.standard.Media;
 import java.net.URI;
 import java.util.List;
 
@@ -61,18 +60,30 @@ public class RestMessageClient extends RestClient implements FeedsService {
                 .queryParam(FeedsService.SECRET, secret).request()
                 .post(Entity.entity(msg, MediaType.APPLICATION_JSON));
 
-        if( r.getStatus() != Status.OK.getStatusCode() || !r.hasEntity())
+        if( r.getStatus() != Status.OK.getStatusCode())
             System.out.println("Error, HTTP error status " + r.getStatus());
 
         return 0;
     }
 
+    private int clt_addFollower(String user,String userSub,String secret) {
+        System.out.println("Client addFollower:"+user+"; usersub:"+userSub+"; secret:"+secret);
+        Response r = target.path("/update/subs/" + user + "/" + userSub)
+                .queryParam(FeedsService.SECRET,secret).request()
+                .post(Entity.json(null));
+
+        if( r.getStatus() != Status.OK.getStatusCode())
+            System.out.println("Error, HTTP error status in addFollower:" + r.getStatus());
+
+        return 0;
+    }
+
     private int clt_removeFollower(String user,String userSub,String secret) {
-        Response r = target.path("/remove/sub/" + user + "/" + userSub)
+        Response r = target.path("/update/subs/" + user + "/" + userSub)
                 .queryParam(FeedsService.SECRET, secret).request()
                 .delete();
 
-        if( r.getStatus() != Status.OK.getStatusCode() || !r.hasEntity())
+        if( r.getStatus() != Status.OK.getStatusCode())
             System.out.println("Error, HTTP error status " + r.getStatus());
 
         return 0;
@@ -127,6 +138,11 @@ public class RestMessageClient extends RestClient implements FeedsService {
     @Override
     public void updateFeeds(Message msg, String user,String secret) {
         super.reTry( () -> clt_updateFeeds(msg,user,secret));
+    }
+
+    @Override
+    public void addFollower(String user, String userSub, String secret) {
+        super.reTry( () -> clt_addFollower(user, userSub,secret));
     }
 
     @Override
