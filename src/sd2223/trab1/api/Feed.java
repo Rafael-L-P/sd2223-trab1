@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Represents an user feed
+ * Represents a user feed
  */
 public class Feed {
     private String user;
