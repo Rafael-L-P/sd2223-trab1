@@ -116,10 +116,24 @@ public class FeedResource implements FeedsService {
     public Message getMessage(String user, long mid) {
         Log.info("GetMessage : User: " + user + "; Message id: " + mid);
         String[] tokens = user.split("@");
+        String serviceName = tokens[1]+USER_SERVICE;
 
-        Feed feed = feeds.get(tokens[0]);
+        if(!hasUser(tokens[0],serviceName)) {
+            Log.info("User does not exist.");
+            throw new WebApplicationException(Status.NOT_FOUND);
+        }
+
+        if (tokens[1].equals(domain))
+            return getLocalMessage(tokens[0],mid);
+        else
+            return getRemoteMessage(user,tokens[1],mid);
+    }
+
+    private Message getLocalMessage(String user, long mid) {
+        Log.info("GetLocalMessage : User: " + user + "; Message id: " + mid);
+        Feed feed = feeds.get(user);
         if (feed == null) {
-            Log.info("User or Message does not exist.");
+            Log.info("Message does not exist.");
             throw new WebApplicationException(Status.NOT_FOUND);
         }
 
@@ -132,26 +146,50 @@ public class FeedResource implements FeedsService {
         return msg;
     }
 
+    private Message getRemoteMessage(String user,String dom,long mid) {
+        Log.info("GetRemoteMessage : User: " + user + "; Message id: " + mid+"; domain:"+dom);
+        String serviceName = dom+FEED_SERVICE;
+        URI[] uris = dis.knownUrisOf(serviceName, 1);
+        Message msg = new RestFeedServer(uris[0]).getRemoteMessage(user,mid);
+
+        if(msg == null) {
+            Log.info("Message does not exist.");
+            throw new WebApplicationException(Status.NOT_FOUND);
+        }
+        return msg;
+    }
+
     @Override
     public List<Message> getMessages(String user, long time) {
         Log.info("GetMessages : User: " + user + "; Time: " + time);
         String[] tokens = user.split("@");
+        String serviceName = tokens[1]+USER_SERVICE;
 
-        Feed feed = feeds.get(tokens[0]);
-        String serviceName = tokens[1] + USER_SERVICE;
-        if (feed == null && hasUser(tokens[0],serviceName)) {;
-            feed = new Feed(tokens[0],tokens[1]);
-            feeds.put(tokens[0],feed);
-        }
-
-        if (feed == null) {
+        if(!hasUser(tokens[0],serviceName)) {
             Log.info("User does not exist.");
             throw new WebApplicationException(Status.NOT_FOUND);
         }
 
-        List<Message> messageList = feed.getMessages(time);
+        if (tokens[1].equals(domain))
+            return getLocalMessages(tokens[0],time);
+        else
+            return getRemoteMessages(user,tokens[1],time);
+    }
 
-        return messageList;
+    private List<Message> getLocalMessages(String user,long time) {
+        Feed feed = feeds.get(user);
+        if (feed == null ) {
+            feed = new Feed(user,domain);
+            feeds.put(user,feed);
+        }
+        return feed.getMessages(time);
+    }
+
+    private List<Message> getRemoteMessages(String user,String dom,long time) {
+        Log.info("GetRemoteMessages : User: " + user + "; time: " + time+"; domain:"+dom);
+        String serviceName = dom+FEED_SERVICE;
+        URI[] uris = dis.knownUrisOf(serviceName, 1);
+        return new RestFeedServer(uris[0]).getRemoteMessages(user,time);
     }
 
     @Override

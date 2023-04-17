@@ -6,7 +6,9 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.Status;
 import sd2223.trab1.api.Message;
+import sd2223.trab1.api.User;
 import sd2223.trab1.api.rest.FeedsService;
+import sd2223.trab1.api.rest.UsersService;
 
 import java.net.URI;
 import java.util.List;
@@ -53,6 +55,33 @@ public class RestMessageClient extends RestClient implements FeedsService {
 
         if( r.getStatus() != Status.OK.getStatusCode() || !r.hasEntity())
             System.out.println("Error, HTTP error status " + r.getStatus());
+    }
+
+    private Message clt_getMessage(String user,long mid){
+        Response r = target.path("/"+user+"/"+mid ).request()
+                .accept(MediaType.APPLICATION_JSON)
+                .get();
+
+        if( r.getStatus() == Status.OK.getStatusCode() && r.hasEntity() )
+            return r.readEntity(Message.class);
+        else
+            System.out.println("Error, HTTP error status: " + r.getStatus() );
+
+        return null;
+    }
+
+    private List<Message> clt_getMessages(String user,long time) {
+        Response r = target.path("/"+user )
+                .queryParam(FeedsService.TIME, time).request()
+                .accept(MediaType.APPLICATION_JSON)
+                .get();
+
+        if( r.getStatus() == Status.OK.getStatusCode() && r.hasEntity() )
+            return r.readEntity(List.class);
+        else
+            System.out.println("Error, HTTP error status: " + r.getStatus() );
+
+        return null;
     }
 
     private int clt_updateFeeds(Message msg, String user, String secret) {
@@ -112,12 +141,12 @@ public class RestMessageClient extends RestClient implements FeedsService {
 
     @Override
     public Message getMessage(String user, long mid) {
-        return null;
+        return super.reTry( () -> clt_getMessage(user,mid));
     }
 
     @Override
     public List<Message> getMessages(String user, long time) {
-        return null;
+        return super.reTry( () -> clt_getMessages(user,time));
     }
 
     @Override
