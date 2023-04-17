@@ -17,8 +17,8 @@ public interface FeedsService {
 	String USERSUB = "userSub";
 	String SECRET = "secret";
 	String MESSAGE = "msg";
-	
 	String PATH = "/feeds";
+
 	/**
 	 * Posts a new message in the feed, associating it to the feed of the specific user.
 	 * A message should be identified before publish it, by assigning an ID.
@@ -138,8 +138,8 @@ public interface FeedsService {
 	 * Post the Message of the user in the feeds of those who follow him.
 	 *
 	 * @param msg the message to be posted in the feeds
-	 * @param user the owner of the message
-	 * @param secret a keyword to prove the authenticity of the sernder
+	 * @param user the owner of the message (format user@domain)
+	 * @param secret a keyword to prove the authenticity of the sender
 	 * @return 200 if ok
 	 * 		   403 is generated if the secret is wrong
 	 */
@@ -148,14 +148,29 @@ public interface FeedsService {
 	@Consumes(MediaType.APPLICATION_JSON)
 	void updateFeeds(Message msg, @PathParam(USER) String user, @QueryParam(SECRET) String secret);
 
+
+	/**
+	 * Remove a user from the follower list of another user's feed
+	 *
+	 * @param user follower to be removed (format user@domain)
+	 * @param userSub user who is being followed (format user@domain)
+	 * @param secret a keyword to prove the authenticity of the sender
+	 */
 	@POST
 	@Path("/update/subs/{" + USER + "}/{" + USERSUB + "}")
 	void addFollower(@PathParam(USER) String user, @PathParam(USERSUB) String userSub, @QueryParam(SECRET) String secret);
+
 
 	@DELETE
 	@Path("/update/subs/{" + USER + "}/{" + USERSUB +"}")
 	void removeFollower(@PathParam(USER) String user, @PathParam(USERSUB) String subUser, @QueryParam(SECRET) String secret);
 
+	/**
+	 * Delete the feed of a user
+	 *
+	 * @param user user whose feed is deleted
+	 * @param secret a keyword to prove the authenticity of the sender
+	 */
 	@DELETE
 	@Path("/delete/{"+USER+"}")
 	@Consumes(MediaType.APPLICATION_JSON)

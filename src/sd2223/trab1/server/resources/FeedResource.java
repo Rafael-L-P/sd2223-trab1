@@ -47,6 +47,7 @@ public class FeedResource implements FeedsService {
             throw new WebApplicationException(Status.BAD_REQUEST);
         }
 
+        // Splitting user into name and domain
         String[] tokens = user.split("@");
 
         // Check if the domain in the message is the server domain
@@ -57,24 +58,24 @@ public class FeedResource implements FeedsService {
 
         String serviceName = domain + USER_SERVICE;
 
+        // Check if user exists in the current domain
         if(!hasUser(tokens[0], serviceName)) {
             Log.info("Publisher does not exist in current domain.");
             throw new WebApplicationException(Status.NOT_FOUND);
         }
 
-        // Check if the user exists and the pwd is correct
         var currentUser = getUser(tokens[0], pwd, serviceName);
 
+        // If user exists and currentUser is null, then password is incorrect
         if(currentUser == null) {
             Log.info("Password is incorrect.");
             throw new WebApplicationException(Status.FORBIDDEN);
         }
 
         if( msg.getId() == -1) {
-            // Generate mid
             msg.setId(count++);
-            // Propagate msg
         }
+
         msg.setCreationTime(System.currentTimeMillis());
 
         Feed userFeed = feeds.get(tokens[0]);
@@ -92,14 +93,24 @@ public class FeedResource implements FeedsService {
     @Override
     public void removeFromPersonalFeed(String user, long mid, String pwd) {
         Log.info("Remove from Feed : User: " + user + "; Message ID: " + mid + "; pwd: " + pwd);
+
+        // Splitting user into name and domain
         String[] tokens = user.split("@");
 
-        String serviceName = tokens[1] + ":users";
-        var currentUser = getUser(tokens[0],pwd,serviceName);
+        String serviceName = tokens[1] + USER_SERVICE;
 
-        if(currentUser == null) {
-            Log.info("User does not exist.");
+        // Check if user exists in the current domain
+        if(!hasUser(tokens[0], serviceName)) {
+            Log.info("User does not exist");
             throw new WebApplicationException(Status.NOT_FOUND);
+        }
+
+        var currentUser = getUser(tokens[0], pwd, serviceName);
+
+        // If user exists and currentUser is null, then password is incorrect
+        if(currentUser == null) {
+            Log.info("Password is incorrect.");
+            throw new WebApplicationException(Status.FORBIDDEN);
         }
 
         Feed userFeed = feeds.get(tokens[0]);
@@ -115,6 +126,8 @@ public class FeedResource implements FeedsService {
     @Override
     public Message getMessage(String user, long mid) {
         Log.info("GetMessage : User: " + user + "; Message id: " + mid);
+
+        // Splitting user into name and domain
         String[] tokens = user.split("@");
         String serviceName = tokens[1]+USER_SERVICE;
 
@@ -162,6 +175,8 @@ public class FeedResource implements FeedsService {
     @Override
     public List<Message> getMessages(String user, long time) {
         Log.info("GetMessages : User: " + user + "; Time: " + time);
+
+        // Splitting user into name and domain
         String[] tokens = user.split("@");
         String serviceName = tokens[1]+USER_SERVICE;
 
@@ -196,6 +211,7 @@ public class FeedResource implements FeedsService {
     public void subUser(String user, String userSub, String pwd) {
         Log.info("SubUser : User: " + user + "; Subscribed User: " + userSub + "; pwd: " + pwd);
 
+        // Splitting users into name and domain
         String[] tokens = user.split("@");
         String[] tokensSub = userSub.split("@");
 
@@ -239,6 +255,8 @@ public class FeedResource implements FeedsService {
     @Override
     public void unsubscribeUser(String user, String userSub, String pwd) {
         Log.info("UnsubUser : User: " + user + "; Subscribed User: " + userSub + "; pwd: " + pwd);
+
+        // Splitting users into name and domain
         String[] tokens = user.split("@");
         String[] tokensSub = userSub.split("@");
 
@@ -280,6 +298,8 @@ public class FeedResource implements FeedsService {
 
     @Override
     public List<String> listSubs(String user) {
+
+        // Splitting user into name and domain
         String[] tokens = user.split("@");
 
         String serviceName = tokens[1] + ":users";
@@ -353,6 +373,8 @@ public class FeedResource implements FeedsService {
             Log.info("Request reserved to servers.");
             throw new WebApplicationException(Status.FORBIDDEN);
         }
+
+        // Splitting user into name and domain
         String[] tokens = subUser.split("@");
 
         Feed feed = feeds.get(tokens[0]);
@@ -376,7 +398,9 @@ public class FeedResource implements FeedsService {
 
     private void propagateMessage(List<String> userSubs,String user,Message msg) {
         List<String> domains = new ArrayList<String>();
-        for (String sub: userSubs) {
+
+        for (String sub : userSubs) {
+            // Splitting user into name and domain
             String[] tokens = sub.split("@");
             if(!domains.contains(tokens[1]) && !domain.equals(tokens[1]))
                 domains.add(tokens[1]);

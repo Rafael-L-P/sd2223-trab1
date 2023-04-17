@@ -39,11 +39,6 @@ public class RestMessageClient extends RestClient implements FeedsService {
 
     private void clt_subUser(String user, String userSub, String pwd) {
 
-        /*Response r = target.path("sub/" + user + "/" + userSub)
-                .queryParam(FeedsService.PWD, pwd).request()
-                .accept(MediaType.APPLICATION_JSON)
-                .post(Entity.entity())
-        */
     }
 
     private void clt_removeFromPersonalFeed(String user, long mid, String pwd) {
@@ -136,7 +131,7 @@ public class RestMessageClient extends RestClient implements FeedsService {
 
     @Override
     public void removeFromPersonalFeed(String user, long mid, String pwd) {
-        //super.reTry( () -> clt_removeFromPersonalFeed(user,mid,pwd));
+
     }
 
     @Override
@@ -151,7 +146,7 @@ public class RestMessageClient extends RestClient implements FeedsService {
 
     @Override
     public void subUser(String user, String userSub, String pwd) {
-        //super.reTry( () -> clt_subUser(user,userSub,pwd));
+
     }
 
     @Override

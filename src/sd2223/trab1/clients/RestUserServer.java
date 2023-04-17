@@ -1,8 +1,5 @@
 package sd2223.trab1.clients;
 
-import sd2223.trab1.api.Message;
-import sd2223.trab1.api.User;
-
 import java.net.URI;
 
 public class RestUserServer {
