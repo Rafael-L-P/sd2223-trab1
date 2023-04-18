@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
 public class FeedResource implements FeedsService {
@@ -21,7 +22,7 @@ public class FeedResource implements FeedsService {
     private final static String FEED_SERVICE = ":feeds";
     private final static String SECRET = "3Hc4q";
 
-    private final Map<String, Feed> feeds = new HashMap<>();
+    private final Map<String, Feed> feeds = new ConcurrentHashMap<>();
 
     private static Logger Log = Logger.getLogger(UsersResource.class.getName());
 
@@ -72,27 +73,33 @@ public class FeedResource implements FeedsService {
             throw new WebApplicationException(Status.FORBIDDEN);
         }
 
-        if( msg.getId() == -1) {
-            msg.setId(count++);
+        synchronized(feeds) {
+            if( msg.getId() == -1) {
+                msg.setId(count++);
+            }
+            msg.setCreationTime(System.currentTimeMillis());
+
+            Feed userFeed = feeds.get(tokens[0]);
+            if(userFeed == null) {
+                userFeed = new Feed(user,domain);
+                feeds.put(currentUser.getName(),userFeed);
+            }
+
+            userFeed.postMessage(msg);
+            propagateMessage(userFeed.getFollowers(),user,msg);
         }
-
-        msg.setCreationTime(System.currentTimeMillis());
-
-        Feed userFeed = feeds.get(tokens[0]);
-        if(userFeed == null) {
-            userFeed = new Feed(user,domain);
-            feeds.put(currentUser.getName(),userFeed);
-        }
-
-        userFeed.postMessage(msg);
-        propagateMessage(userFeed.getFollowers(),user,msg);
 
         return count - 1;
     }
 
     @Override
-    public void removeFromPersonalFeed(String user, long mid, String pwd) {
+    public synchronized void removeFromPersonalFeed(String user, long mid, String pwd) {
         Log.info("Remove from Feed : User: " + user + "; Message ID: " + mid + "; pwd: " + pwd);
+
+        if(mid < 0) {
+            Log.info("Message does not exist.");
+            throw new WebApplicationException(Status.NOT_FOUND);
+        }
 
         // Splitting user into name and domain
         String[] tokens = user.split("@");
@@ -127,6 +134,11 @@ public class FeedResource implements FeedsService {
     public Message getMessage(String user, long mid) {
         Log.info("GetMessage : User: " + user + "; Message id: " + mid);
 
+        if (mid < 0) {
+            Log.info("Message does not exist.");
+            throw new WebApplicationException(Status.NOT_FOUND);
+        }
+
         // Splitting user into name and domain
         String[] tokens = user.split("@");
         String serviceName = tokens[1]+USER_SERVICE;
@@ -142,7 +154,7 @@ public class FeedResource implements FeedsService {
             return getRemoteMessage(user,tokens[1],mid);
     }
 
-    private Message getLocalMessage(String user, long mid) {
+    private synchronized Message getLocalMessage(String user, long mid) {
         Log.info("GetLocalMessage : User: " + user + "; Message id: " + mid);
         Feed feed = feeds.get(user);
         if (feed == null) {
@@ -155,7 +167,6 @@ public class FeedResource implements FeedsService {
             Log.info("Message does not exist.");
             throw new WebApplicationException(Status.NOT_FOUND);
         }
-
         return msg;
     }
 
@@ -191,7 +202,7 @@ public class FeedResource implements FeedsService {
             return getRemoteMessages(user,tokens[1],time);
     }
 
-    private List<Message> getLocalMessages(String user,long time) {
+    private synchronized List<Message> getLocalMessages(String user,long time) {
         Feed feed = feeds.get(user);
         if (feed == null ) {
             feed = new Feed(user,domain);
@@ -208,7 +219,7 @@ public class FeedResource implements FeedsService {
     }
 
     @Override
-    public void subUser(String user, String userSub, String pwd) {
+    public synchronized void subUser(String user, String userSub, String pwd) {
         Log.info("SubUser : User: " + user + "; Subscribed User: " + userSub + "; pwd: " + pwd);
 
         // Splitting users into name and domain
@@ -253,7 +264,7 @@ public class FeedResource implements FeedsService {
     }
 
     @Override
-    public void unsubscribeUser(String user, String userSub, String pwd) {
+    public synchronized void unsubscribeUser(String user, String userSub, String pwd) {
         Log.info("UnsubUser : User: " + user + "; Subscribed User: " + userSub + "; pwd: " + pwd);
 
         // Splitting users into name and domain
@@ -296,7 +307,7 @@ public class FeedResource implements FeedsService {
     }
 
     @Override
-    public List<String> listSubs(String user) {
+    public synchronized List<String> listSubs(String user) {
 
         // Splitting user into name and domain
         String[] tokens = user.split("@");
@@ -333,7 +344,7 @@ public class FeedResource implements FeedsService {
     }
 
     @Override
-    public void updateFeeds(Message msg, String user,String secret) {
+    public synchronized void updateFeeds(Message msg, String user,String secret) {
         Log.info("Update Feeds: User"+user+"; msg: "+msg.getText());
         if (!secret.equals(SECRET)) {
             Log.info("Request reserved to servers.");
@@ -349,7 +360,7 @@ public class FeedResource implements FeedsService {
     }
 
     @Override
-    public void addFollower (String user, String userSub, String secret) {
+    public synchronized void addFollower (String user, String userSub, String secret) {
         Log.info("Add Follower: User:"+user+"; userSub:"+ userSub);
         if (!secret.equals(SECRET)) {
             Log.info("Request reserved to servers.");
@@ -366,7 +377,7 @@ public class FeedResource implements FeedsService {
     }
 
     @Override
-    public void removeFollower (String user, String subUser,String secret) {
+    public synchronized void removeFollower (String user, String subUser,String secret) {
         Log.info("Remove Follower: User:"+user+"; subUser:"+subUser);
         if (!secret.equals(SECRET)) {
             Log.info("Request reserved to servers.");
@@ -386,7 +397,7 @@ public class FeedResource implements FeedsService {
     }
 
     @Override
-    public void deleteUser(String user, String secret) {
+    public synchronized void deleteUser(String user, String secret) {
         Log.info("Delete user:"+user);
         if (!secret.equals(SECRET)) {
             Log.info("Request reserved to servers.");
